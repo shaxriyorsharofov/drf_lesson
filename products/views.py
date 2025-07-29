@@ -110,8 +110,19 @@ class ListCreateApi(GenericAPIView):
         }
         
         return Response(data)
-    
-    
+
+
+
+    def post(self, request):
+        books = self.get_queryset()
+        serializer = self.get_serializer(data=request.data)
+        if serializer.is_valid():
+            serializer.save()
+            return Response({'status': status.HTTP_201_CREATED, 'message': 'Successfully added the book!'})
+        return Response({'error' : serializer.errors, 'status' : status.HTTP_400_BAD_REQUEST})
+
+
+
 class DetailUpdateDeleteApi(GenericAPIView):
     queryset = Books.objects.all()
     serializer_class = BookSerializer
@@ -130,4 +141,38 @@ class DetailUpdateDeleteApi(GenericAPIView):
         
         return Response(data)
         
-    
+
+    def put(self, request, pk):
+        try:
+            country = self.get_object(pk=pk)
+        except Books.DoesNotExist:
+            return Response({'status': status.HTTP_404_NOT_FOUND, 'message': 'Book under this id does not exist'})
+        serializer = BookSerializer(country, data=request.data)
+        if serializer.is_valid():
+            serializer.save()
+            return Response({'status': status.HTTP_200_OK, 'data': serializer.data})
+
+        return Response({'error': serializer.errors, 'status': status.HTTP_400_BAD_REQUEST})
+
+
+    def patch(self, request, pk):
+        try:
+            country = self.get_object(pk=pk)
+        except Books.DoesNotExist:
+            return Response({'status': status.HTTP_404_NOT_FOUND, 'message': 'Book under this id does not exist'})
+        serializer = BookSerializer(country, data=request.data, partial=True)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(
+                {'status': status.HTTP_200_OK, 'info': 'Successfully partially updated!', 'data': serializer.data})
+        return Response({'error': serializer.errors, 'status': status.HTTP_400_BAD_REQUEST})
+
+
+    def delete(self, request, pk):
+        try:
+            country = self.get_object(pk=pk)
+        except Books.DoesNotExist:
+            return Response({'status': status.HTTP_404_NOT_FOUND, 'message': 'Book under this id does not exist'})
+        serializer = BookSerializer(country)
+        country.delete()
+        return Response({'status': status.HTTP_204_NO_CONTENT, 'message': 'Book deleted successfully'})

@@ -6,6 +6,7 @@ from rest_framework.response import Response
 from rest_framework.decorators import api_view
 from rest_framework.generics import GenericAPIView, ListAPIView, RetrieveAPIView, DestroyAPIView, UpdateAPIView, CreateAPIView, ListCreateAPIView, RetrieveUpdateDestroyAPIView
 from rest_framework.views import APIView
+from rest_framework import mixins
 
     
 # Create your views here
@@ -96,50 +97,60 @@ from rest_framework.views import APIView
 
 
 
-class ListCreateApi(GenericAPIView):
+class ListCreateApi(mixins.ListModelMixin, mixins.CreateModelMixin, GenericAPIView):
     queryset = Books.objects.all()
     serializer_class = BookSerializer
+    
+    # def get(self,  request):
+    #     books = self.get_queryset()
+    #     serializer = self.get_serializer(books, many=True)
+    #     data = {
+    #         'data': serializer.data,
+    #         'count': len(books),
+    #         'status': status.HTTP_200_OK
+    #     }
+        
+    #     return Response(data)
     
     def get(self,  request):
-        books = self.get_queryset()
-        serializer = self.get_serializer(books, many=True)
-        data = {
-            'data': serializer.data,
-            'count': len(books),
-            'status': status.HTTP_200_OK
-        }
-        
-        return Response(data)
+        return self.list(request)
 
 
+    # def post(self, request):
+    #     serializer = self.get_serializer(data=request.data)
+    #     if serializer.is_valid():
+    #         serializer.save()
+    #         return Response({'status': status.HTTP_201_CREATED, 'message': 'Successfully added the book!'})
+    #     return Response({'error' : serializer.errors, 'status' : status.HTTP_400_BAD_REQUEST})
 
     def post(self, request):
-        books = self.get_queryset()
-        serializer = self.get_serializer(data=request.data)
-        if serializer.is_valid():
-            serializer.save()
-            return Response({'status': status.HTTP_201_CREATED, 'message': 'Successfully added the book!'})
-        return Response({'error' : serializer.errors, 'status' : status.HTTP_400_BAD_REQUEST})
+        return self.create(request)
 
 
-
-class DetailUpdateDeleteApi(GenericAPIView):
+class DetailUpdateDeleteApi(
+    mixins.DestroyModelMixin,
+    mixins.RetrieveModelMixin,
+    mixins.UpdateModelMixin,
+    GenericAPIView):
     queryset = Books.objects.all()
     serializer_class = BookSerializer
     
-    def get_object(self, pk):
-        book = Books.objects.get(id=pk)
-        return book
+    # def get_object(self, pk):
+    #     book = Books.objects.get(id=pk)
+    #     return book
     
-    def get(self, request, pk):
-        book = self.get_object(pk=pk)
-        serializer = BookSerializer(book)
-        data = {
-            'data': serializer.data,
-            'status': status.HTTP_200_OK
-        }
+    # def get(self, request, pk):
+    #     book = self.get_object(pk=pk)
+    #     serializer = BookSerializer(book)
+    #     data = {
+    #         'data': serializer.data,
+    #         'status': status.HTTP_200_OK
+    #     }
         
-        return Response(data)
+    #     return Response(data)
+    
+    def get(self,  request):
+        return self.(request)
         
 
     def put(self, request, pk):
@@ -173,6 +184,5 @@ class DetailUpdateDeleteApi(GenericAPIView):
             country = self.get_object(pk=pk)
         except Books.DoesNotExist:
             return Response({'status': status.HTTP_404_NOT_FOUND, 'message': 'Book under this id does not exist'})
-        serializer = BookSerializer(country)
         country.delete()
         return Response({'status': status.HTTP_204_NO_CONTENT, 'message': 'Book deleted successfully'})
